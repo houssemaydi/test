@@ -1,0 +1,49 @@
+package com.example.demo.service;
+
+import com.example.demo.repository.DataQualityRepository;
+import com.example.demo.domain.DataQualityEntity;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@ExtendWith(MockitoExtension.class)
+public class DataQualityServiceTest {
+
+    @Mock
+    private DataQualityRepository dataQualityRepository;
+
+    @InjectMocks
+    private DataQualityService dataQualityService;
+
+    @Test
+    public void testGetAllDataQuality() {
+        // Arrange
+        boolean withForeignCurrency = true;
+        int fiscalYear = 2020;
+        List<String> entities = Arrays.asList("Entity1", "Entity2");
+        List<String> ledgers = Arrays.asList("Ledger1", "Ledger2");
+        List<String> accounts = Arrays.asList("Account1", "Account2");
+        List<AxisAnalyticsEnum> axisAnalyticsEnumList = Arrays.asList(AxisAnalyticsEnum.VALUE1, AxisAnalyticsEnum.VALUE2);
+        AxisAnalyticsRequest axisAnalyticsRequest = new AxisAnalyticsRequest(); // Assuming you have such a class
+
+        List<DataQualityEntity> expected = Arrays.asList(new DataQualityEntity(), new DataQualityEntity());
+        when(dataQualityRepository.getAllDataQuality(any(Boolean.class), any(Integer.class), anyList(), anyList(), anyList(), any(AxisAnalyticsRequest.class)))
+                .thenReturn(expected);
+
+        // Act
+        List<DataQualityEntity> actual = dataQualityService.getAllDataQuality(withForeignCurrency, fiscalYear, entities, ledgers, accounts, axisAnalyticsEnumList, axisAnalyticsRequest);
+
+        // Assert
+        assertEquals(expected, actual);
+    }
+
+    // More test methods...
+}
