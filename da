@@ -1,49 +1,51 @@
-package com.example.demo.service;
-
-import com.example.demo.repository.DataQualityRepository;
-import com.example.demo.domain.DataQualityEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import java.util.Arrays;
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.BDDMockito.given;
 
-@ExtendWith(MockitoExtension.class)
-public class DataQualityServiceTest {
+import java.util.Optional;
 
-    @Mock
-    private DataQualityRepository dataQualityRepository;
+@ExtendWith(SpringExtension.class)
+@WebMvcTest(BookController.class)
+public class BookControllerTest {
 
-    @InjectMocks
-    private DataQualityService dataQualityService;
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private BookService bookService;
 
     @Test
-    public void testGetAllDataQuality() {
-        // Arrange
-        boolean withForeignCurrency = true;
-        int fiscalYear = 2020;
-        List<String> entities = Arrays.asList("Entity1", "Entity2");
-        List<String> ledgers = Arrays.asList("Ledger1", "Ledger2");
-        List<String> accounts = Arrays.asList("Account1", "Account2");
-        List<AxisAnalyticsEnum> axisAnalyticsEnumList = Arrays.asList(AxisAnalyticsEnum.VALUE1, AxisAnalyticsEnum.VALUE2);
-        AxisAnalyticsRequest axisAnalyticsRequest = new AxisAnalyticsRequest(); // Assuming you have such a class
+    public void getBookById_WhenBookExists_ShouldReturnBook() throws Exception {
+        Book book = new Book();
+        book.setId(1L);
+        book.setTitle("Test Book");
+        book.setAuthor("Test Author");
 
-        List<DataQualityEntity> expected = Arrays.asList(new DataQualityEntity(), new DataQualityEntity());
-        when(dataQualityRepository.getAllDataQuality(any(Boolean.class), any(Integer.class), anyList(), anyList(), anyList(), any(AxisAnalyticsRequest.class)))
-                .thenReturn(expected);
+        given(bookService.findById(1L)).willReturn(Optional.of(book));
 
-        // Act
-        List<DataQualityEntity> actual = dataQualityService.getAllDataQuality(withForeignCurrency, fiscalYear, entities, ledgers, accounts, axisAnalyticsEnumList, axisAnalyticsRequest);
-
-        // Assert
-        assertEquals(expected, actual);
+        mockMvc.perform(get("/books/{id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.title").value("Test Book"))
+                .andExpect(jsonPath("$.author").value("Test Author"));
     }
 
-    // More test methods...
+    @Test
+    public void getBookById_WhenBookDoesNotExist_ShouldReturnNotFound() throws Exception {
+        given(bookService.findById(1L)).willReturn(Optional.empty());
+
+        mockMvc.perform(get("/books/{id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
 }
